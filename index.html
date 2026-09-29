@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Puzzle Kolaborasi — Penguatan Slide 7 (v2 - sinkron)</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0e2a47; --navy2:#16385e; --navy3:#1f4b7a;
+  --gold:#e0a52e; --gold2:#f2c14e; --goldsoft:#fdf3dd;
+  --lblue:#9cc7e8; --lblue2:#e3f0fa; --blue:#3d85c6; --blue2:#1d6fa5;
+  --ink:#1c2b3a; --gray:#5c6b7a; --line:#dbe6f0;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;color:var(--ink);min-height:100vh;
+  background:radial-gradient(1100px 600px at 80% -10%,#1d4d80 0%,var(--navy) 55%,#0a2038 100%);}
+h1,h2,h3,.pf{font-family:'Poppins',sans-serif}
+button{font-family:'Poppins',sans-serif;cursor:pointer}
+#app{max-width:1120px;margin:0 auto;padding:20px}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:18px;padding:14px 20px;margin-bottom:16px}
+.brand{display:flex;align-items:center;gap:12px;color:#fff}
+.brand .logo{width:46px;height:46px;border-radius:12px;background:linear-gradient(150deg,var(--gold),var(--gold2));
+  display:flex;align-items:center;justify-content:center;font-size:24px}
+.brand b{font-size:17px;display:block}
+.brand span{font-size:12px;color:#9cc7e8}
+.stats{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stat{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:12px;
+  padding:8px 14px;font-size:13px;min-width:86px;text-align:center}
+.stat b{display:block;font-size:16px;color:var(--gold2);transition:transform .2s}
+/* kedipan umpan balik: hijau = skor naik, merah = salah bertambah */
+.stat b.bump-good{animation:goodflash .6s}
+.stat b.bump-bad{animation:badflash .6s}
+@keyframes goodflash{0%{color:#7fd48a;transform:scale(1.3)}100%{color:var(--gold2);transform:scale(1)}}
+@keyframes badflash{0%{color:#ff8a80;transform:scale(1.3)}100%{color:var(--gold2);transform:scale(1)}}
+.iconbtn{width:42px;height:42px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);
+  color:#fff;font-size:18px}
+
+.panel{background:#fff;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden}
+.panel .inner{padding:22px}
+.leveltag{display:inline-flex;align-items:center;gap:8px;background:var(--goldsoft);color:#8a5f0a;border:1px solid #f0d9a8;
+  padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600}
+.gametitle{font-size:24px;color:var(--navy);margin:10px 0 2px}
+.gamesub{color:var(--gray);font-size:14px;margin-bottom:16px}
+
+.playgrid{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
+@media(max-width:860px){.playgrid{grid-template-columns:1fr}}
+.boardwrap{background:var(--lblue2);border:1px solid #c5def2;border-radius:18px;padding:14px;display:flex;justify-content:center}
+#board{width:100%;max-width:640px;height:auto;display:block}
+.slotG{transition:opacity .3s}
+.slotG.shake{animation:shake .4s}
+.fillG{opacity:0;pointer-events:none;transform-box:fill-box;transform-origin:center}
+.fillG.show{opacity:1;animation:pop .5s cubic-bezier(.2,.9,.3,1.4)}
+.slot-hl path.slot{stroke:var(--gold)!important;stroke-width:3!important}
+@keyframes pop{0%{transform:scale(.5)}60%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+
+.sidecard{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.sidecard h4{color:var(--navy);font-size:15px;margin-bottom:8px}
+.sidecard p{font-size:13px;color:var(--gray);line-height:1.6}
+.progress{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.pdot{width:26px;height:26px;border-radius:8px;background:var(--lblue2);border:1px solid var(--lblue);
+  display:flex;align-items:center;justify-content:center;font-size:14px;filter:grayscale(1);opacity:.4}
+.pdot.on{filter:none;opacity:1;background:var(--goldsoft);border-color:var(--gold)}
+
+.tray{margin-top:18px;background:var(--lblue2);border:1px dashed var(--lblue);border-radius:16px;padding:14px}
+.tray h4{color:var(--navy);font-size:14px;margin-bottom:10px}
+.pieces{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.tray-piece{width:128px;cursor:grab;touch-action:none;transition:transform .15s;filter:drop-shadow(0 6px 12px rgba(14,42,71,.25))}
+.tray-piece:hover{transform:translateY(-5px)}
+.tray-piece.dragging-src{opacity:.35}
+.floating{position:fixed;z-index:90;pointer-events:none;filter:drop-shadow(0 14px 26px rgba(0,0,0,.4));transform:scale(1.06)}
+
+#level2{display:none}
+.sentence-build{min-height:76px;background:var(--goldsoft);border:2px dashed var(--gold);border-radius:16px;
+  padding:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0}
+.wordchip{background:var(--navy);color:#fff;border:none;border-radius:12px;padding:11px 15px;font-size:15px;font-weight:500;transition:transform .12s}
+.wordchip:hover{transform:translateY(-3px)}
+.wordchip.locked{background:var(--gold);color:#3a2a05;cursor:default}
+.wordchip.shake{animation:shake .35s}
+.chipsbank{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+
+.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:rgba(7,20,38,.7);backdrop-filter:blur(6px);z-index:120}
+.overlay.hidden{display:none}
+.modal{background:#fff;border-radius:24px;max-width:560px;width:100%;padding:34px;text-align:center;position:relative;overflow:hidden}
+.modal:before{content:"";position:absolute;top:0;left:0;right:0;height:8px;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.bigemoji{font-size:60px}
+.btn{border:none;border-radius:14px;padding:14px 26px;font-size:16px;font-weight:600;transition:.2s}
+.btn.gold{background:linear-gradient(150deg,var(--gold),var(--gold2));color:#3a2a05}
+.btn.navy{background:var(--navy);color:#fff}
+.btn.ghost{background:var(--lblue2);color:var(--navy)}
+.btn:hover{transform:translateY(-2px)}
+.stars{font-size:44px;letter-spacing:6px;margin:8px 0}
+.star{color:#d7dee6}.star.on{color:var(--gold)}
+.recap{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:16px 0}
+.recap span{background:var(--lblue2);border:1px solid var(--lblue);color:var(--navy);border-radius:999px;padding:7px 13px;font-size:13px;font-weight:500}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--navy);color:#fff;
+  padding:13px 22px;border-radius:14px;font-size:14px;z-index:130;box-shadow:0 12px 30px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:.3s}
+.toast.show{opacity:1;bottom:40px}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:140}
+.foot{color:#7f95ac;text-align:center;font-size:12px;margin:16px 0 30px}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+
+<div id="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">🧩</div>
+      <div><b>PUZZLE KOLABORASI</b><span>Penguatan Slide 7 · Apa Itu Kolaborasi?</span></div>
+    </div>
+    <div class="stats">
+      <div class="stat">Level<b id="lvl">1</b></div>
+      <div class="stat">Skor<b id="score">0</b></div>
+      <div class="stat">Waktu<b id="time">00:00</b></div>
+      <div class="stat">Salah<b id="wrongs">0</b></div>
+      <button class="iconbtn" id="muteBtn" title="Suara">🔊</button>
+    </div>
+  </div>
+
+  <div class="panel"><div class="inner">
+    <div id="level1">
+      <span class="leveltag">🧩 Level 1 · Susun Fondasi Kolaborasi</span>
+      <h2 class="gametitle pf">Lengkapi Papan Kolaborasi</h2>
+      <p class="gamesub">Seret setiap potongan ke kotak yang sesuai dengan <b>petunjuk makna</b> di dalamnya. Keenam fondasi harus terpasang semua.</p>
+      <div class="playgrid">
+        <div>
+          <div class="boardwrap"><svg id="board" viewBox="0 0 630 460"></svg></div>
+          <div class="tray">
+            <h4>Potongan Puzzle — seret ke papan 👇</h4>
+            <div class="pieces" id="tray"></div>
+          </div>
+        </div>
+        <div>
+          <div class="sidecard">
+            <h4>📖 Cara Bermain</h4>
+            <p>1. Baca <b>petunjuk</b> pada tiap kotak papan.<br>
+               2. <b>Seret</b> potongan di bawah yang paling cocok.<br>
+               3. Lepas di kotak tersebut.<br>
+               Benar = <b>+100 Skor</b> · Salah = <b>+1 Salah</b> & −10 Skor.</p>
+          </div>
+          <div class="sidecard">
+            <h4>🎯 Fondasi Kolaborasi</h4>
+            <p>Kolaborasi dibangun oleh 6 fondasi. Pasang semuanya untuk lanjut ke Level 2.</p>
+            <div class="progress" id="progress"></div>
+          </div>
+          <div class="sidecard">
+            <h4>💡 Ingat</h4>
+            <p>Kolaborasi <b>bukan sekadar berkumpul</b> — ada tujuan, pemikiran, tindakan, dan tanggung jawab bersama.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="level2">
+      <span class="leveltag">🔤 Level 2 · Susun Kalimat Kunci</span>
+      <h2 class="gametitle pf">Susun Pesan Utama Slide 7</h2>
+      <p class="gamesub">Klik kartu kata <b>secara berurutan</b> untuk membangun kalimat yang benar.</p>
+      <div class="sentence-build" id="build"></div>
+      <div class="chipsbank" id="chips"></div>
+      <div style="margin-top:16px;text-align:center">
+        <button class="btn ghost" id="resetL2">🔀 Acak Ulang</button>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="foot">Inkuiri Kolaborasi · Penguatan Slide 7 — Miftachul Ulum, S.Pd., M.Pd. · Pengawas Sekolah Kota Kediri</div>
+</div>
+
+<div class="overlay" id="startScreen">
+  <div class="modal">
+    <div class="bigemoji">🧩</div>
+    <h2 class="pf" style="color:var(--navy);font-size:26px;margin:10px 0 6px">PUZZLE KOLABORASI</h2>
+    <p style="color:var(--gray);line-height:1.7">Penguatan materi <b>Slide 7 — Apa Itu Kolaborasi?</b><br>
+    Susun <b>6 fondasi kolaborasi</b> pada papan puzzle, lalu rangkai kalimat kuncinya.</p>
+    <div style="margin:16px 0;font-size:13px;color:var(--gray)">🖱️ Seret potongan · 📱 Bisa disentuh · ⏱️ Waktu berjalan</div>
+    <button class="btn gold" id="startBtn">▶  Mulai Bermain</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="transScreen">
+  <div class="modal">
+    <div class="bigemoji">🎉</div>
+    <h2 class="pf" style="color:var(--navy);margin:10px 0 6px">Papan Kolaborasi Lengkap!</h2>
+    <p style="color:var(--gray)">Keenam fondasi sudah terpasang. Sekarang susun <b>kalimat kunci</b> kolaborasi.</p>
+    <button class="btn gold" id="toL2" style="margin-top:18px">Lanjut ke Level 2 ➜</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="finalScreen">
+  <div class="modal">
+    <div class="bigemoji">🏆</div>
+    <h2 class="pf" style="color:var(--navy);margin:6px 0">Selamat, Kamu Hebat!</h2>
+    <div class="stars" id="stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span></div>
+    <p style="color:var(--gray)">Skor <b id="fScore" style="color:var(--navy)">0</b> · Waktu <b id="fTime" style="color:var(--navy)">00:00</b> · Salah <b id="fWrong" style="color:var(--navy)">0</b></p>
+    <div class="recap" id="recap"></div>
+    <p style="background:var(--goldsoft);border:1px solid #f0d9a8;border-radius:14px;padding:14px;font-style:italic;color:#6b4d0a;font-size:14px;line-height:1.6">
+      “Kolaborasi bukan sekadar berkumpul — ada tujuan bersama, proses berpikir bersama, tindakan bersama, dan tanggung jawab bersama.”
+    </p>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:18px">
+      <button class="btn gold" id="againBtn">🔁 Main Lagi</button>
+      <button class="btn navy" id="doneBtn">✔ Selesai</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const COLS=3,ROWS=2,CELL=170,OX=60,OY=60,VBW=630,VBH=460;
+const H=[[1,-1,1]];
+const V=[[1,-1],[-1,1]];
+const P=[
+ {name:'Kepercayaan',lines:['Kepercayaan'],icon:'🤝',color:'#16385e',txt:'#ffffff',clue:['Setiap anggota dianggap','berniat baik dan','dapat diandalkan.']},
+ {name:'Keterbukaan',lines:['Keterbukaan'],icon:'🔓',color:'#e0a52e',txt:'#3a2a05',clue:['Terbuka pada ide, data,','dan masukan dari','siapa pun.']},
+ {name:'Saling Menghargai',lines:['Saling','Menghargai'],icon:'🙏',color:'#3d85c6',txt:'#ffffff',clue:['Menghargai peran,','pengalaman, dan','pendapat semua pihak.']},
+ {name:'Berbagi Praktik',lines:['Berbagi','Praktik'],icon:'🔄',color:'#1d6fa5',txt:'#ffffff',clue:['Saling berbagi cara','mengajar dan','pengalaman nyata.']},
+ {name:'Tanggung Jawab Bersama',lines:['Tanggung Jawab','Bersama'],icon:'🫱',color:'#b8860b',txt:'#ffffff',clue:['Keberhasilan dan','perbaikan menjadi','tanggung jawab bersama.']},
+ {name:'Refleksi Bersama',lines:['Refleksi','Bersama'],icon:'🪞',color:'#7fb3d5',txt:'#0e2a47',clue:['Melihat kembali proses','dan hasil untuk','belajar bersama.']}
+];
+const SENT=['Kolaborasi bukan','sekadar berkumpul,','tetapi ada tujuan bersama,','proses berpikir bersama,','tindakan bersama,','dan tanggung jawab bersama.'];
+
+/* ===== STATE terpusat ===== */
+let state={score:0,wrongs:0,filled:0,seconds:0,level:1};
+let slots=[],timer=null,muted=false,drag=null;
+const board=$('#board');
+const SVGNS='http://www.w3.org/2000/svg';
+const mk=(t,a)=>{const e=document.createElementNS(SVGNS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+
+/* ===== RENDER terpusat: semua angka selalu sinkron dengan state ===== */
+function render(){
+  $('#score').textContent=state.score;
+  $('#wrongs').textContent=state.wrongs;
+  $('#lvl').textContent=state.level;
+  $('#time').textContent=fmt(state.seconds);
+}
+function pulse(el,cls){el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls);}
+
+function edgeCmd(x1,y1,x2,y2,s){
+  if(s===0)return `L ${x2} ${y2} `;
+  const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy);
+  const n1x=x1+dx*0.4,n1y=y1+dy*0.4,n2x=x1+dx*0.6,n2y=y1+dy*0.6;
+  const R=(len*0.16).toFixed(2),sweep=s>0?0:1;
+  return `L ${n1x} ${n1y} A ${R} ${R} 0 1 ${sweep} ${n2x} ${n2y} L ${x2} ${y2} `;
+}
+function pieceD(r,c){
+  const x=OX+c*CELL,y=OY+r*CELL;
+  const sT=r===0?0:H[r-1][c], sR=c===COLS-1?0:-V[r][c],
+        sB=r===ROWS-1?0:-H[r][c], sL=c===0?0:V[r][c-1];
+  return `M ${x} ${y} `+edgeCmd(x,y,x+CELL,y,sT)+edgeCmd(x+CELL,y,x+CELL,y+CELL,sR)
+        +edgeCmd(x+CELL,y+CELL,x,y+CELL,sB)+edgeCmd(x,y+CELL,x,y,sL)+'Z';
+}
+
+function buildBoard(){
+  board.innerHTML='';slots=[];
+  board.appendChild(mk('rect',{x:6,y:6,width:VBW-12,height:VBH-12,rx:24,fill:'#f2f8fd',stroke:'#c5def2','stroke-width':2}));
+  for(let r=0;r<ROWS;r++){slots[r]=[];
+    for(let c=0;c<COLS;c++){
+      const id=r*COLS+c,p=P[id],d=pieceD(r,c),cx=OX+c*CELL+CELL/2,cy=OY+r*CELL+CELL/2;
+      const g=mk('g',{class:'slotG'});
+      g.appendChild(mk('path',{d,class:'slot',fill:'#ffffff',stroke:'#b9cfe3','stroke-width':2,'stroke-dasharray':'6 5'}));
+      g.appendChild(mk('circle',{cx:OX+c*CELL+24,cy:OY+r*CELL+24,r:13,fill:'#e3f0fa',stroke:'#9cc7e8'}));
+      const numT=mk('text',{x:OX+c*CELL+24,y:OY+r*CELL+29,'text-anchor':'middle','font-size':12,'font-weight':700,fill:'#1d6fa5'});numT.textContent=id+1;g.appendChild(numT);
+      const clue=mk('g',{class:'clueG',style:'transition:opacity .3s'});
+      const ic=mk('text',{x:cx,y:cy-22,'text-anchor':'middle','font-size':26});ic.textContent='❓';clue.appendChild(ic);
+      p.clue.forEach((ln,i)=>{const t=mk('text',{x:cx,y:cy+4+i*17,'text-anchor':'middle','font-size':12,fill:'#5c6b7a'});t.textContent=ln;clue.appendChild(t);});
+      g.appendChild(clue);
+      const fg=mk('g',{class:'fillG'});
+      fg.appendChild(mk('path',{d,fill:p.color,stroke:'#ffffff','stroke-width':3}));
+      const fic=mk('text',{x:cx,y:cy-14,'text-anchor':'middle','font-size':24});fic.textContent=p.icon;fg.appendChild(fic);
+      p.lines.forEach((ln,i)=>{const t=mk('text',{x:cx,y:cy+12+i*17,'text-anchor':'middle','font-size':13,'font-weight':700,fill:p.txt});t.textContent=ln;fg.appendChild(t);});
+      board.appendChild(g);board.appendChild(fg);
+      slots[r][c]={r,c,id,filled:false,g,clueG:clue,fillG:fg};
+    }
+  }
+}
+function buildTray(){
+  const tray=$('#tray');tray.innerHTML='';
+  const order=[0,1,2,3,4,5].sort(()=>Math.random()-.5);
+  order.forEach(id=>{
+    const r=Math.floor(id/COLS),c=id%COLS,p=P[id];
+    const x=OX+c*CELL,y=OY+r*CELL;
+    const svg=mk('svg',{viewBox:`${x-55} ${y-55} ${CELL+110} ${CELL+110}`,class:'tray-piece'});
+    svg.dataset.id=id;svg.style.touchAction='none';
+    svg.appendChild(mk('path',{d:pieceD(r,c),fill:p.color,stroke:'rgba(0,0,0,.18)','stroke-width':2}));
+    const cx=x+CELL/2,cy=y+CELL/2;
+    const ic=mk('text',{x:cx,y:cy-12,'text-anchor':'middle','font-size':26});ic.textContent=p.icon;svg.appendChild(ic);
+    p.lines.forEach((ln,i)=>{const t=mk('text',{x:cx,y:cy+16+i*16,'text-anchor':'middle','font-size':13,'font-weight':700,fill:p.txt});t.textContent=ln;svg.appendChild(t);});
+    svg.addEventListener('pointerdown',onDown);
+    tray.appendChild(svg);
+  });
+}
+/* FIX: pakai index forEach sebagai id dot (sebelumnya p.id = undefined) */
+function buildProgress(){
+  const pr=$('#progress');pr.innerHTML='';
+  P.forEach((p,i)=>{const d=document.createElement('div');d.className='pdot';d.dataset.id=i;d.textContent=p.icon;pr.appendChild(d);});
+}
+
+function onDown(e){
+  if(drag)return;const el=e.currentTarget,id=+el.dataset.id;
+  e.preventDefault();el.setPointerCapture(e.pointerId);
+  const rect=el.getBoundingClientRect();
+  drag={id,el,clone:null,ox:e.clientX-rect.left,oy:e.clientY-rect.top,w:rect.width};
+  const clone=el.cloneNode(true);clone.classList.add('floating');clone.classList.remove('tray-piece');
+  clone.style.width=rect.width+'px';document.body.appendChild(clone);drag.clone=clone;
+  el.classList.add('dragging-src');moveDrag(e);hl(e);
+}
+window.addEventListener('pointermove',e=>{if(!drag)return;moveDrag(e);hl(e);});
+window.addEventListener('pointerup',e=>{if(!drag)return;const s=slotFromEvent(e);if(s)attempt(drag.id,s);endDrag();});
+window.addEventListener('pointercancel',()=>{if(drag)endDrag();});
+function moveDrag(e){if(!drag||!drag.clone)return;drag.clone.style.left=(e.clientX-drag.ox)+'px';drag.clone.style.top=(e.clientY-drag.oy)+'px';}
+function endDrag(){if(drag){if(drag.clone)drag.clone.remove();drag.el.classList.remove('dragging-src');}clearHl();drag=null;}
+function boardPt(e){const rc=board.getBoundingClientRect();return{x:(e.clientX-rc.left)/rc.width*VBW,y:(e.clientY-rc.top)/rc.height*VBH};}
+function slotFromEvent(e){const p=boardPt(e);const c=Math.floor((p.x-OX)/CELL),r=Math.floor((p.y-OY)/CELL);
+  if(r<0||c<0||r>=ROWS||c>=COLS)return null;return slots[r][c];}
+function clearHl(){document.querySelectorAll('.slot-hl').forEach(n=>n.classList.remove('slot-hl'));}
+function hl(e){clearHl();const s=slotFromEvent(e);if(s&&!s.filled)s.g.classList.add('slot-hl');}
+
+/* ===== Handler dipisah tegas: BENAR hanya menyentuh Skor+dot, SALAH hanya menyentuh Salah+penalti ===== */
+function attempt(id,s){
+  if(s.filled){wrong(s,'Kotak itu sudah terisi 🙂');return;}
+  if(s.id===id) correct(id,s);
+  else wrong(s,'Belum tepat — baca lagi petunjuknya 🔍');
+}
+function correct(id,s){
+  s.filled=true;s.clueG.style.opacity=0;s.fillG.classList.add('show');
+  const tp=document.querySelector(`.tray-piece[data-id="${id}"]`);if(tp)tp.style.display='none';
+  const dot=document.querySelector(`.pdot[data-id="${id}"]`);if(dot)dot.classList.add('on');
+  state.score+=100; state.filled++;
+  render(); pulse($('#score'),'bump-good'); sfx('ok');
+  if(state.filled===COLS*ROWS)setTimeout(level1Done,500);
+}
+function wrong(s,msg){
+  state.wrongs++; state.score=Math.max(0,state.score-10);
+  render(); pulse($('#wrongs'),'bump-bad'); sfx('no');
+  s.g.classList.add('shake');setTimeout(()=>s.g.classList.remove('shake'),420);toast(msg);
+}
+
+function level1Done(){$('#transScreen').classList.remove('hidden');}
+$('#toL2').onclick=()=>{$('#transScreen').classList.add('hidden');$('#level1').style.display='none';
+  $('#level2').style.display='block';state.level=2;render();buildLevel2();};
+
+let next=0;
+function buildLevel2(){
+  next=0;const build=$('#build'),bank=$('#chips');build.innerHTML='';bank.innerHTML='';
+  SENT.map((_,i)=>i).sort(()=>Math.random()-.5).forEach(i=>{
+    const b=document.createElement('button');b.className='wordchip';b.textContent=SENT[i];b.dataset.i=i;
+    b.onclick=()=>pickWord(b);bank.appendChild(b);});
+}
+function pickWord(btn){
+  if(+btn.dataset.i===next){btn.classList.add('locked');btn.onclick=null;
+    $('#build').appendChild(btn);next++;sfx('tick');
+    if(next===SENT.length)setTimeout(finish,600);
+  }else{state.wrongs++;state.score=Math.max(0,state.score-5);render();pulse($('#wrongs'),'bump-bad');sfx('no');
+    btn.classList.add('shake');setTimeout(()=>btn.classList.remove('shake'),360);}
+}
+$('#resetL2').onclick=()=>{buildLevel2();toast('Kata diacak ulang 🔀');};
+
+function finish(){
+  clearInterval(timer);sfx('win');burst(200);
+  const st=state.wrongs<=2?3:state.wrongs<=5?2:1;
+  document.querySelectorAll('#stars .star').forEach((s,i)=>s.classList.toggle('on',i<st));
+  $('#fScore').textContent=state.score;$('#fTime').textContent=fmt(state.seconds);$('#fWrong').textContent=state.wrongs;
+  const rc=$('#recap');rc.innerHTML='';P.forEach(p=>{const s=document.createElement('span');s.textContent=p.icon+' '+p.name;rc.appendChild(s);});
+  $('#finalScreen').classList.remove('hidden');
+}
+$('#againBtn').onclick=()=>resetGame();
+$('#doneBtn').onclick=()=>{$('#finalScreen').classList.add('hidden');toast('Terima kasih sudah bermain! 🙌');};
+
+function resetGame(){
+  $('#finalScreen').classList.add('hidden');$('#transScreen').classList.add('hidden');
+  $('#level2').style.display='none';$('#level1').style.display='block';
+  state={score:0,wrongs:0,filled:0,seconds:0,level:1};
+  render(); buildBoard();buildTray();buildProgress();startTimer();toast('Permainan dimulai ulang 🔁');
+}
+
+function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function startTimer(){clearInterval(timer);timer=setInterval(()=>{state.seconds++;render();},1000);}
+
+let AC;function tone(f,d,type,g){if(muted)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+  const o=AC.createOscillator(),ga=AC.createGain();o.type=type||'sine';o.frequency.value=f;
+  ga.gain.setValueAtTime(g||.12,AC.currentTime);ga.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);
+  o.connect(ga);ga.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch(e){}}
+function sfx(k){if(k==='ok'){tone(660,.12);setTimeout(()=>tone(880,.16),90);}
+  else if(k==='no')tone(200,.22,'sawtooth',.06);
+  else if(k==='tick')tone(760,.07,'triangle',.08);
+  else if(k==='win')[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.22,'triangle',.12),i*130));}
+$('#muteBtn').onclick=()=>{muted=!muted;$('#muteBtn').textContent=muted?'🔇':'🔊';};
+
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');
+  clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),1800);}
+
+const cv=$('#confetti'),cx=cv.getContext('2d');let parts=[],anim=null;
+function burst(n){cv.width=innerWidth;cv.height=innerHeight;
+  const cols=['#e0a52e','#f2c14e','#16385e','#3d85c6','#9cc7e8','#ffffff'];
+  for(let i=0;i<n;i++)parts.push({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.4,
+    w:6+Math.random()*8,h:8+Math.random()*10,vy:2+Math.random()*3.4,vx:-1.6+Math.random()*3.2,
+    rot:Math.random()*Math.PI,vr:-.12+Math.random()*.24,color:cols[i%cols.length]});
+  if(!anim)tick();}
+function tick(){cx.clearRect(0,0,cv.width,cv.height);parts=parts.filter(p=>p.y<cv.height+40);
+  parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;cx.save();cx.translate(p.x,p.y);cx.rotate(p.rot);
+    cx.fillStyle=p.color;cx.fillRect(-p.w/2,-p.h/2,p.w,p.h);cx.restore();});
+  if(parts.length)anim=requestAnimationFrame(tick);else{anim=null;cx.clearRect(0,0,cv.width,cv.height);}}
+
+$('#startBtn').onclick=()=>{$('#startScreen').classList.add('hidden');startTimer();sfx('win');};
+buildBoard();buildTray();buildProgress();render();
+</script>
+</body>
+</html>
